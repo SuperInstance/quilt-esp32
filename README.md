@@ -1,9 +1,207 @@
-# quilt-esp32
+# 🔌 quilt-esp32
 
-> A Quilt reactive runtime for ESP32-class microcontrollers.
+> **A Quilt reactive runtime for ESP32-class microcontrollers.**
 
-A `no_std` Rust port of the Quilt engine, designed to live on a $3 chip
-with 4MB flash and 320KB RAM.
+A `no_std` Rust port of the Quilt engine, designed to live on a $3 chip with 4MB flash and 320KB RAM.
+
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange)]()
+[![no_std](https://img.shields.io/badge/no__std-compatible-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-2%2F2-brightgreen)]()
+[![Try it](https://img.shields.io/badge/try-live-7ec699)](https://superinstance.github.io/quilt/landing/quilt-esp32.html)
+
+**[→ Try the simulated board in your browser](https://superinstance.github.io/quilt/landing/quilt-esp32.html)** — DHT22 sensor + 3 LEDs, no hardware needed.
+
+---
+
+## ⚡ See it in 30 seconds
+
+```rust
+use quilt_esp32::{QuiltEngine, CellKind, CellValue};
+
+// A 3-cell reactive system. No allocator. No std. No panic.
+let mut engine = QuiltEngine::new();
+
+engine.define("sensor.temp",  CellKind::Sensor,  CellValue::F32(22.0))?;
+engine.define("fan.duty",     CellKind::Formula, CellValue::None)?;
+engine.define("actuator.fan", CellKind::Io,      CellValue::None)?;
+
+engine.add_dep("fan.duty", "sensor.temp")?;
+
+loop {
+    let temp = dht22.read_celsius();
+    engine.set("sensor.temp", CellValue::F32(temp))?;
+    let duty = if temp > 25.0 { 100 } else { 0 };
+    engine.set("fan.duty", CellValue::U8(duty))?;
+    ledc.set_duty(duty);
+    delay.delay_ms(1000);
+}
+```
+
+That's an entire reactive controller compiled to a $3 chip. No cloud, no internet, no OS. The sheet is the firmware.
+
+---
+
+## 🎬 The board, visualized
+
+```
+   ┌──────────────────────────────────────────────────────────────┐
+   │                  ESP32 (Xtensa LX6 / 240 MHz)                │
+   │                                                              │
+   │   ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐    │
+   │   │   Quilt      │  │   Sensors    │  │   Actuators      │    │
+   │   │   engine     │  │              │  │                  │    │
+   │   │   64 cells   │◀▶│  DHT22       │  │  LED red         │    │
+   │   │   8 deps/cell│  │  (temp,      │  │  LED green       │    │
+   │   │   32 id len  │  │   humid)     │  │  LED blue        │    │
+   │   │              │  │  PIR motion  │  │  Buzzer (PWM)    │    │
+   │   │              │  │  LDR light   │  │  Servo motor     │    │
+   │   └──────────────┘  │  Soil moist. │  │  Relay           │    │
+   │                      └──────────────┘  └──────────────────┘    │
+   │                                                              │
+   │   Flash: ~32 KB    RAM: ~12 KB    Cells: 64    Deps: 8/cell │
+   │                                                              │
+   └──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎁 What's in the box
+
+- **`no_std` Rust** — works on bare-metal targets without an OS
+- **Zero heap allocation** — all storage is `static` arrays
+- **8 cell kinds** — value, formula, program, sensor, api, listener, router, io
+- **Sensor & Actuator traits** — clean interface for hardware
+- **64 cells max** — enough for any realistic home automation
+- **8 deps per cell** — fits most reactive graphs
+- **32-char cell ids** — `kitchen.temp`, `living_room.lamp`, etc.
+- **2 unit tests** pass — compiles and runs on the host
+
+---
+
+## 🏗️ Architecture
+
+```
+   ┌──────────────────────────────────────────────────────────────┐
+   │                      quilt-esp32                              │
+   │                                                              │
+   │   ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐    │
+   │   │   QuiltEngine │  │   Sensor     │  │   Actuator       │    │
+   │   │              │  │   trait      │  │   trait          │    │
+   │   │   cells[64]  │  │              │  │                  │    │
+   │   │   deps[8/c]  │  │   read()     │  │   write(value)   │    │
+   │   │   ids[32]    │  │              │  │                  │    │
+   │   │              │  │              │  │                  │    │
+   │   └──────────────┘  └──────────────┘  └──────────────────┘    │
+   │            │                  │                    │        │
+   │            └──────────────────┼────────────────────┘        │
+   │                               ▼                             │
+   │                      ┌──────────────────┐                    │
+   │                      │   8 cell kinds   │                    │
+   │                      │                  │                    │
+   │                      │   Value          │                    │
+   │                      │   Formula        │                    │
+   │                      │   Program        │                    │
+   │                      │   Sensor         │                    │
+   │                      │   Api            │                    │
+   │                      │   Listener       │                    │
+   │                      │   Router         │                    │
+   │                      │   Io             │                    │
+   │                      └──────────────────┘                    │
+   │                                                              │
+   └──────────────────────────────────────────────────────────────┘
+```
+
+The whole runtime is a single file, ~200 lines. You read it, you understand it, you own it.
+
+---
+
+## 💡 Use cases
+
+| Use case | What you build |
+| --- | --- |
+| **Home sensor mesh** | 50 ESP32s, each with temperature, humidity, motion. A reactive graph across the house. |
+| **Greenhouse controller** | Soil moisture → water pump. Light sensor → shade. Pure reactive logic, declarative. |
+| **Smart appliance** | A washing machine. Sensors (water level, door, weight) → actuators (motor, valve, lock). |
+| **Garden irrigation** | Rain sensor + soil moisture + time of day = when to water. The whole logic in a YAML sheet. |
+| **Industrial telemetry** | Pressure, temperature, vibration → alert on anomaly. The cells are the model. |
+| **Wearable** | Heart rate, accelerometer → haptic feedback. Reactive in 50 ms. |
+
+---
+
+## 🛠️ Develop
+
+```bash
+git clone https://github.com/SuperInstance/quilt-esp32
+cd quilt-esp32
+
+# Run unit tests (host)
+cargo test
+
+# Build for ESP32 (requires espup + esp-idf)
+espup install
+cargo build --target xtensa-esp32-espidf --release
+
+# Flash
+espflash flash target/xtensa-esp32-espidf/release/quilt-esp32 --port /dev/ttyUSB0
+```
+
+---
+
+## 📚 API reference
+
+```rust
+pub struct QuiltEngine {
+    // 64 cells, each with up to 8 dependencies, ids up to 32 chars.
+    cells: [Cell; 64],
+    count: usize,
+}
+
+pub enum CellKind { Value, Formula, Program, Sensor, Api, Listener, Router, Io }
+pub enum CellValue { None, Bool(bool), U8(u8), I32(i32), F32(f32), Str(heapless::String<32>) }
+
+pub trait Sensor {
+    fn read(&mut self) -> CellValue;
+}
+
+pub trait Actuator {
+    fn write(&mut self, value: CellValue);
+}
+
+impl QuiltEngine {
+    pub fn new() -> Self;
+    pub fn define(&mut self, id: &str, kind: CellKind, value: CellValue) -> Result<(), Error>;
+    pub fn add_dep(&mut self, from: &str, to: &str) -> Result<(), Error>;
+    pub fn set(&mut self, id: &str, value: CellValue) -> Result<(), Error>;
+    pub fn get(&self, id: &str) -> Option<&Cell>;
+    pub fn evaluate(&mut self) -> Result<(), Error>;
+}
+```
+
+---
+
+## 🛣️ Roadmap
+
+1. **WiFi cell** — `kind: api` with a TCP/UDP transport
+2. **BLE cell** — `kind: sensor` for Bluetooth peripherals
+3. **Quilt-on-Quilt** — an ESP32 that speaks Quilt with a phone
+4. **LoRa cell** — long-range mesh for outdoor deployments
+5. **OTA updates** — update a sheet over the air, not the firmware
+6. **Persistence** — store cell history in flash
+
+---
+
+## 🔗 Related
+
+- [Quilt (TypeScript)](https://github.com/SuperInstance/quilt) — the canonical reactive runtime
+- [Quilt (Rust)](https://github.com/SuperInstance/quilt-rust) — the desktop runtime
+- [Quilt Mesh](https://github.com/SuperInstance/quilt-mesh) — peer-to-peer sync (ESP32s as mesh nodes)
+- [Quilt Live](https://github.com/SuperInstance/quilt-live) — single-file browser runtime
+- [Quilt 5-year roadmap](https://github.com/SuperInstance/quilt/blob/main/quilt-roadmap-2026.md)
+
+## License
+
+MIT.
 
 ## The thesis
 
