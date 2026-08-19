@@ -1,0 +1,20 @@
+[package]
+name = "quilt-esp32"
+version = "0.1.0"
+edition = "2021"
+description = "A Quilt reactive runtime for ESP32-class microcontrollers."
+license = "MIT"
+
+[dependencies]
+# A real implementation would depend on esp-hal and friends.
+# For now we just sketch the API surface so it can be reviewed.
+# esp-hal = "0.18"
+# esp-wifi = "0.5"
+# serde = { version = "1.0", default-features = false, features = ["derive"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+overflow-checks = false
