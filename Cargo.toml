@@ -8,6 +8,7 @@ license = "MIT"
 [dependencies]
 # A real implementation would depend on esp-hal and friends.
 # For now we just sketch the API surface so it can be reviewed.
+# heapless = "0.7"
 # esp-hal = "0.18"
 # esp-wifi = "0.5"
 # serde = { version = "1.0", default-features = false, features = ["derive"] }
