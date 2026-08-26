@@ -14,6 +14,23 @@ A `no_std` Rust port of the Quilt engine, designed to live on a $3 chip with 4MB
 
 ---
 
+## ✅ MILESTONE: limb-blink PROVEN ON METAL (2026-08-26)
+
+**The green blink is confirmed.** An ESP32-S3 DevKit (WROOM-1) blinks its RGB LED
+at 1Hz **driven by a compiled `.qm` rule table through the real quilt-vm-c** —
+no cloud, no model, no WiFi. A quilt signal cell, embodied.
+
+- **Firmware:** `firmware/` — `blink.qm` → `qm2c.py` (compile-time codegen, no
+  parser on target) → `qm_serve.c` + vendored `quilt_vm.c` → PlatformIO build
+- **Targets:** `esp32dev` (classic, GPIO2 blue LED) and `esp32s3` (DevKitC,
+  WS2812 RGB — **the flashed board**), merged images in `firmware/dist/`
+- **Verified on hardware:** ESP32-S3 (QFN56 rev v0.2, MAC cc:ba:97:09:01:38),
+  flashed 2026-08-26 13:04 AKDT — hash verified, green blink at 1Hz, RAM 6.5%,
+  flash 20.4%. Serial at 115200 shows the JSON serve log: `{"i":0,"mode":"table","led":1}`
+- **Run it:** see `firmware/README-SPIKE.md`
+
+```
+
 ## ⚡ See it in 30 seconds
 
 ```rust
