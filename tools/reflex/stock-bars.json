@@ -1,0 +1,55 @@
+{
+ "source": "gate/arranger-voicings.json",
+ "bars": [
+  {
+   "run": "cortex-plug-2026-08-26T19-00-03-931Z",
+   "tick": 1,
+   "chord": "Dm7",
+   "bar": "@piano | d3-f3-a3-c4 . . c4 . c4 c4 . | vel: 68",
+   "tension_target": 0.543
+  },
+  {
+   "run": "cortex-plug-2026-08-26T19-00-03-931Z",
+   "tick": 1,
+   "chord": "G7",
+   "bar": "@piano | . f3-b3-d4 . . d4 . d4 . | vel: 68",
+   "tension_target": 0.543
+  },
+  {
+   "run": "cortex-plug-2026-08-26T19-00-03-931Z",
+   "tick": 5,
+   "chord": "A7b9",
+   "bar": "@piano | a3-bb3-c#4-e4 . . e4 e4 . e4 . | vel: 72",
+   "tension_target": 0.683
+  },
+  {
+   "run": "cortex-plug-2026-08-26T19-05-55-961Z",
+   "tick": 1,
+   "chord": "Dm7",
+   "bar": "@piano | d3-f3-a3-c4 . . c4 . c4 c4 . | vel: 68",
+   "tension_target": 0.543
+  },
+  {
+   "run": "cortex-plug-2026-08-26T19-05-55-961Z",
+   "tick": 1,
+   "chord": "G7",
+   "bar": "@piano | . f3-b3-d4 . . d4 . d4 . | vel: 68",
+   "tension_target": 0.543
+  },
+  {
+   "run": "cortex-plug-2026-08-26T19-05-55-961Z",
+   "tick": 5,
+   "chord": "A7b9",
+   "bar": "@piano | a3-bb3-c#4-e4 . . e4 e4 . e4 . | vel: 72",
+   "tension_target": 0.683
+  },
+  {
+   "run": "cortex-plug-2026-08-26T19-05-55-961Z",
+   "tick": 13,
+   "chord": "E7b9",
+   "bar": "@piano | e3-g#3-d4-e4 . e4 . . e4 e4 e4 | vel: 71",
+   "tension_target": 0.622
+  }
+ ],
+ "skipped": []
+}
