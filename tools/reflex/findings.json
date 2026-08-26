@@ -9,8 +9,8 @@
   "anchor_probes": {"ok": 20, "total": 20, "pct": 100.0000}
  },
  "latency_ns_desktop": {
-  "accept": {"n": 73, "p50": 20, "p99": 70},
-  "revise": {"n": 7, "p50": 20, "p99": 40}
+  "accept": {"n": 73, "p50": 20, "p99": 60},
+  "revise": {"n": 7, "p50": 30, "p99": 50}
  },
  "gate": {"version": 3, "sha256": "9c896bb021e87b782c6a00121af830db9f86d9ded49ba6b3e6c35c4213a7e3e4", "bands_sha_note": "see critic-gate.qm"}
 }

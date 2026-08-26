@@ -21,9 +21,10 @@ run: host
 	./host_blink
 
 sync:
-	mkdir -p src/vm
-	cp qm_serve.c qm_serve.h qm_tables.h critic_gate.c critic_gate.h src/
+	mkdir -p src/vm src/reflex
+	cp qm_serve.c qm_serve.h qm_tables.h src/
 	cp vm/quilt_vm.c vm/quilt_vm.h src/vm/
+	cp critic_gate.c critic_gate.h src/reflex/
 
 fw: gen sync
 	$(HOME)/.platformio/penv/bin/pio run -d $(CURDIR)

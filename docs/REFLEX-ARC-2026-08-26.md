@@ -151,7 +151,7 @@ Casey runs the ceremony below.
 
 1. Build: `cd firmware && make reflex-fw` (already built here;
    merged image at `firmware/dist/reflex-arc-merged-0x0.bin`,
-   sha256 `c72d96b70ce9f42d4ca01e982a3669060f3a7d388ae0536d0e0a84d9ebe0d0d9`).
+   sha256 `e8d789c376995e9992a9b34bc8989b621692c143b2dd18f927650f8d7982da2a`).
 
 2. Flash (Linux):
 
