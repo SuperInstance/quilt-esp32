@@ -272,8 +272,14 @@ here are what we want the API to feel like. The actual port will:
 
 ## Status
 
-Sketch only. No working binary yet. The shapes here are the API design
-target.
+`src/lib.rs` remains the API sketch. The **first firmware milestone is real**:
+`firmware/` blinks GPIO2 on an ESP32 DevKit V1 from a compiled `.qm` rule
+(catalog) table through the real quilt-vm-c — no cloud, no model, no WiFi.
+Host-verified (gcc) and cross-verified against the Rust reference VM
+(`qm-runner`): identical modes/responses on every fixture signal. Builds for
+xtensa (PlatformIO, esp32dev). See **`firmware/README-SPIKE.md`** for evidence,
+flash commands, and remaining blockers (on-metal run still pending — the
+board flashes from Windows; `dist/` holds ready-made images).
 
 ## Run the unit tests (host)
 

@@ -1,0 +1,118 @@
+{
+  "format": "qm",
+  "version": 1,
+  "organism": "limb-blink",
+  "ops": [
+    {
+      "op": "bind",
+      "target": "limb-root",
+      "value": {
+        "name": "limb-root",
+        "tier": "totipotent",
+        "role": "minimal spine — no rules, escalation target of record",
+        "rule_count": 0
+      }
+    },
+    {
+      "op": "bind",
+      "target": "limb-root:facts",
+      "value": {
+        "name": "limb-root",
+        "tier": "totipotent",
+        "role": "minimal spine — no rules, escalation target of record",
+        "rule_count": 0
+      }
+    },
+    {
+      "op": "bind",
+      "target": "limb-root:response",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "led-limb",
+      "value": {
+        "name": "led-limb",
+        "tier": "sclerotic",
+        "role": "blink limb — GPIO2 from rule table, zero model calls",
+        "cost_per_call": 0,
+        "latency_ns": 0,
+        "rule_count": 2
+      }
+    },
+    {
+      "op": "bind",
+      "target": "led-limb:facts",
+      "value": {
+        "name": "led-limb",
+        "tier": "sclerotic",
+        "role": "blink limb — GPIO2 from rule table, zero model calls",
+        "cost_per_call": 0,
+        "latency_ns": 0,
+        "rule_count": 2
+      }
+    },
+    {
+      "op": "bind",
+      "target": "led-limb:response",
+      "value": null
+    },
+    {
+      "op": "link",
+      "from": "led-limb",
+      "to": "limb-root",
+      "type": "lineage"
+    },
+    {
+      "op": "effect",
+      "target": "led-limb:response",
+      "guard": {
+        "kind": "tick",
+        "payload_equals": {
+          "phase": "on"
+        }
+      },
+      "action": {
+        "set": {
+          "led": true
+        }
+      }
+    },
+    {
+      "op": "effect",
+      "target": "led-limb:response",
+      "guard": {
+        "kind": "tick",
+        "payload_equals": {
+          "phase": "off"
+        }
+      },
+      "action": {
+        "set": {
+          "led": false
+        }
+      }
+    }
+  ],
+  "views": [
+    {
+      "name": "led-limb/facts",
+      "target": "led-limb:facts",
+      "project": "facts"
+    },
+    {
+      "name": "led-limb/response",
+      "target": "led-limb:response",
+      "project": "response"
+    },
+    {
+      "name": "limb-root/response",
+      "target": "limb-root:response",
+      "project": "response"
+    }
+  ],
+  "routes": {
+    "tick": "led-limb"
+  },
+  "escalations": {}
+}

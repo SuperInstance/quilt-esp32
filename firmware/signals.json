@@ -1,0 +1,7 @@
+[
+  {"to": "led-limb", "kind": "tick", "payload": {"phase": "on"}},
+  {"to": "led-limb", "kind": "tick", "payload": {"phase": "off"}},
+  {"to": "led-limb", "kind": "tick", "payload": {"phase": "sleep"}},
+  {"to": "led-limb", "kind": "tick", "payload": {"phase": "on"}},
+  {"to": "led-limb", "kind": "tick", "payload": {"phase": "off"}}
+]
