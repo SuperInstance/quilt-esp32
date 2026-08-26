@@ -285,6 +285,29 @@ The radio is the bottleneck. The substrate is not.
 - The cowboy rides. The 5 opcodes host everything. The
   composition is the value.
 
+## Latest: the 2026-08-26 milestone
+
+A `.qm` rule table was compiled to C at build time, vendored
+into the same `quilt-vm-c` runtime, and flashed to an
+**ESP32-S3** on 2026-08-26. **1Hz LED blink. No cloud. No
+model. No WiFi.** RAM 6.5%, flash 20.4%, ~2.7s rebuilds.
+
+The seam held: the first spike attempt died with
+`model-required` because the table→model boundary was
+unconfigured. The failure was kept, not hidden. The doctrine
+is enforced at compile time, the seam is enforced at runtime,
+the equivalence is enforced at test time.
+
+The equivalence gate: the C serve path answers identically to
+the Rust `qm-runner` on all 5 fixture signals. Two
+implementations, one truth, both of them ours.
+
+Read the full story:
+[`docs/MILESTONE-2026-08-26.md`](docs/MILESTONE-2026-08-26.md)
+and [Paper 186: A $3 Sheet of Tissue](https://github.com/SuperInstance/AI-Writings/blob/master/seed-canon/papers/paper-186.md).
+
+See the web page: [quilt-ecosystem-web/esp32/](https://github.com/SuperInstance/quilt-ecosystem-web/tree/main/esp32).
+
 ---
 
 ## License
