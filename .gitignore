@@ -4,3 +4,5 @@ Cargo.lock
 .DS_Store
 firmware/.pio/
 firmware/host_blink
+firmware/host_reflex_bin
+tools/reflex/board/

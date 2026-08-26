@@ -1,0 +1,14 @@
+{
+ "runs_scanned": 19,
+ "distinct_real_bars": 80,
+ "vectors": 80,
+ "channel_readings": 480,
+ "skipped": [],
+ "anchors": {
+  "evidence_readings": 20,
+  "matched": 20,
+  "unmatched": [],
+  "probes": 20
+ },
+ "provenance": "every @piano bar from runs/*/*.song + tick-log answer heads, re-measured by plainsong analyze_features (voice=piano), µ = 1e-6"
+}

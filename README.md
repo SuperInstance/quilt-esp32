@@ -25,6 +25,13 @@ flashed and blinking 2026-08-26. RAM 6.5%, flash 20.4%, ~2.7s rebuilds.
   `firmware/README-SPIKE.md`
 - **[The full account — how this milestone healed into existence →](docs/MILESTONE-2026-08-26.md)**
 
+## reflex-arc — the critic's frozen gate on metal (2026-08-26)
+
+The cell-cascade critic's cost-0 6-channel band gate, exported integer-only
+(`critic-gate.qm`, micro-units) and replayed over UART against the desktop
+gate on 500 real critique vectors — 100.0000% agreement, zero divergences.
+Radio dark, mint-receipt sha256 at boot. [The full account →](docs/REFLEX-ARC-2026-08-26.md)
+
 ## ⚡ See it in 30 seconds
 
 ```rust
