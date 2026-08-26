@@ -14,6 +14,17 @@ extern "C" {
 #define LED_BUILTIN 2 /* GPIO2 on DevKit V1 */
 #endif
 
+#ifdef TARGET_ESP32S3
+/* S3 DevKitC-1: addressable WS2812 RGB LED, low brightness */
+static inline void limb_led_write(int on)
+{
+    neopixelWrite(RGB_PIN, on ? 0 : 0, on ? 48 : 0, on ? 0 : 0);
+}
+#define limb_write(led) limb_led_write((led) > 0)
+#else
+#define limb_write(led) digitalWrite(LED_BUILTIN, (led) > 0 ? HIGH : LOW)
+#endif
+
 static qvm_t *vm = NULL;
 static unsigned long serves = 0;
 
@@ -22,7 +33,11 @@ static const char *phase_canon[2] = { "\"on\"", "\"off\"" };
 
 void setup() {
     Serial.begin(115200);
+#ifdef TARGET_ESP32S3
+    neopixelWrite(RGB_PIN, 0, 0, 0); /* RGB off at boot */
+#else
     pinMode(LED_BUILTIN, OUTPUT); /* GPIO2 on DevKit V1 */
+#endif
     if (qm_serve_init(&vm) != 0) {
         Serial.println("{\"ok\":false,\"error\":\"qm_serve_init\"}");
         return;
@@ -45,7 +60,7 @@ void loop() {
     if (rc == 0) {
         int led = qm_led_from_response(resp);
         if (led >= 0)
-            digitalWrite(LED_BUILTIN, led ? HIGH : LOW);
+            limb_write(led);
         /* miss (led == -1): leave LED unchanged, mode says table-miss */
         Serial.printf("{\"i\":%lu,\"mode\":\"%s\",\"led\":%d}\n",
                       serves, mode, led);
