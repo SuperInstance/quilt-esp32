@@ -243,9 +243,10 @@ static int parse_payload(const char *line, size_t len, nmea_sentence_t *out)
         } else if (f[0].len) {                   /* field 1: feet -> m */
             if (nmea_fixed_to_u(f[0].p, f[0].len, &u) != 0) return -1;
             out->depth_um = (int32_t)((int64_t)u * 3048 / 10000);
-        } else if (nf >= 6 && f[4].len) {        /* field 5: fathoms -> m */
+        } else if (nf >= 6 && f[4].len) {        /* field 5: fathoms -> m
+                                                    (6 ft = 1.8288 m exact) */
             if (nmea_fixed_to_u(f[4].p, f[4].len, &u) != 0) return -1;
-            out->depth_um = (int32_t)((int64_t)u * 1852 / 1000);
+            out->depth_um = (int32_t)((int64_t)u * 18288 / 10000);
         } else {
             return -1;                           /* no reading at all */
         }

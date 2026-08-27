@@ -8,7 +8,7 @@
 # src/reflex/gate_qm.h from the minted critic-gate.qm.
 
 .DEFAULT_GOAL := run
-.PHONY: gen host run clean sync fw fw-clean reflex-gen reflex-host reflex-run reflex-fw reflex-clean opcodes-host opcodes-run opcodes-clean merge-s3
+.PHONY: gen host run clean sync fw fw-clean reflex-gen reflex-host reflex-run reflex-fw reflex-clean opcodes-host opcodes-run opcodes-clean merge-s3 nmea-gen nmea-host nmea-run nmea-fw nmea-clean merge-nmea-s3
 
 gen:
 	mkdir -p src/vm
@@ -51,6 +51,41 @@ merge-s3: fw
 	    0x0 .pio/build/esp32s3/bootloader.bin \
 	    0x8000 .pio/build/esp32s3/partitions.bin \
 	    0x10000 .pio/build/esp32s3/firmware.bin
+
+# ── nmea lane: the vessel limb — NMEA 0183 in, sheet cells + rules out ──
+# vessel-demo.qm is authored here (no upstream mint): --mint seals the
+# receipt (sha256 of the file with the receipt zeroed) into the .qm, then
+# compile validates it into src/nmea/vessel_qm.h.
+
+nmea-gen:
+	mkdir -p src/nmea
+	python3 qm_vessel2c.py vessel-demo.qm src/nmea/vessel_qm.h
+
+nmea-host: nmea-gen
+	gcc -O2 -std=c99 -Wall -I. -Ivm -Isrc/nmea -Isrc host_nmea/main.c nmea.c nmea_limb.c qm_opcodes.c vm/quilt_vm.c -o host_nmea_bin
+
+nmea-run: nmea-host
+	./host_nmea_bin vessel-stream.txt
+
+nmea-fw: nmea-gen sync-nmea
+	$(HOME)/.platformio/penv/bin/pio run -d $(CURDIR) -e nmea_limb
+
+nmea-clean:
+	rm -f host_nmea_bin src/nmea/vessel_qm.h
+
+# sync the nmea lane into the pio tree (nmea env compiles src/nmea/ + the
+# shared canon/vm copies already in src/ — see platformio.ini nmea_limb)
+sync-nmea:
+	mkdir -p src/nmea
+	cp nmea.c nmea.h nmea_limb.c nmea_limb.h src/nmea/
+
+# merged esp32s3 image (same layout as the opcodes/reflex lanes)
+merge-nmea-s3: nmea-fw
+	python3 $(HOME)/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32s3 \
+	    merge_bin -o dist/vessel-nmea-s3-merged-0x0.bin \
+	    0x0 .pio/build/nmea_limb/bootloader.bin \
+	    0x8000 .pio/build/nmea_limb/partitions.bin \
+	    0x10000 .pio/build/nmea_limb/firmware.bin
 
 # ── reflex-arc: the critic's frozen gate on metal ─────────────────────────
 # critic-gate.qm is minted on the cell-cascade side:
