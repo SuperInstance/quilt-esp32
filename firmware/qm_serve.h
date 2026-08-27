@@ -8,6 +8,11 @@
 
 #include "quilt_vm.h"
 #include "qm_tables.h"
+#include "qm_opcodes.h"
+
+/* qm_opcodes.h: the five canon opcodes (Paper 211) as C — qm_bind,
+ * qm_link, qm_effect, qm_view, qm_tick — wrapping the vendored VM.
+ * qm_serve.c routes through them; this header re-exports the surface. */
 
 /* qvm_new + BIND every bind + LINK every link. Returns 0 ok, -1 error. */
 int qm_serve_init(qvm_t **vm_out);

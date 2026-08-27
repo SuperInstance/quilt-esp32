@@ -15,6 +15,8 @@ the host (gcc) and builds green for xtensa (PlatformIO / arduino-esp32).
 | `qm2c.py` | vendored generator (Pass A, unchanged) |
 | `qm_tables.h` | table typedefs; now defaults to `#include "qm_prog.h"` when `QM_PROG_HEADER` is not defined |
 | `qm_serve.{c,h}` | portable serve path — root copies are the single editable source of truth |
+| `qm_opcodes.{c,h}` | the five canon opcodes (Paper 211) as C — thin wrap of the vendored VM; `qm_serve` routes through it |
+| `host_opcodes/main.c` | host unit tests: the five opcodes + serve regression (24 checks) |
 | `vm/quilt_vm.{c,h}` | vendored quilt-vm-c (unmodified) |
 | `host/main.c`, `Makefile` | host harness; `gen` now emits `src/qm_prog.h`, host builds with `-Isrc` |
 | `platformio.ini` | `esp32dev` env, Arduino framework, no `lib_deps` |
@@ -150,3 +152,80 @@ then in WSL `/dev/ttyUSB0` appears → `pio run -t upload --upload-port /dev/tty
 - Long-run stability: heap usage of the serve path (strdup per serve,
   freed via effect inverse) is sound by inspection but not soak-tested.
 - WSL cannot flash without usbipd-win — flashing must happen from Windows.
+
+## Opcodes lane — the five canon opcodes as C (2026-08-26)
+
+`qm_opcodes.{c,h}` expose the Quilt canon (Paper 211) as five C functions —
+`qm_bind`, `qm_link`, `qm_effect`, `qm_view`, `qm_tick` — each a thin
+pass-through to the vendored quilt-vm-c's `qvm_*` (which stays
+byte-identical to upstream). Plus two canon-string conveniences the serve
+path uses, `qm_bind_str` / `qm_effect_set`. `qm_serve.c` now routes through
+this layer, so what blinks the LED on metal IS the canon opcode set — the
+ESP32 is a polyformalism of the Quilt, not a custom format. Nothing more
+than that is claimed: semantics are the vendored VM's, unchanged.
+
+### Opcode mapping (canon ↔ C)
+
+| canon (Paper 211) | C | wraps | semantics |
+|---|---|---|---|
+| `BIND(name, value)` | `int qm_bind(qvm_t*, const char *name, void *value, void (*free_value)(void*))` | `qvm_bind` | make a thing |
+| `LINK(a, b, type)` | `int qm_link(qvm_t*, const char *a, const char *b, const char *type)` | `qvm_link` | connect things (missing endpoints implicitly BINDed; reverse edge is `!type`) |
+| `EFFECT(target, fn, inv)` | `int qm_effect(qvm_t*, const char *target, qvm_effect_fn fwd, qvm_effect_fn inv, void *arg)` | `qvm_effect` | queue a reversible change; applies when TICK drains |
+| `VIEW(target, viewer)` | `void *qm_view(qvm_t*, const char *target, const char *viewer)` | `qvm_view` | project the thing's value (NULL if absent) |
+| `TICK(dt)` | `void qm_tick(qvm_t*, double dt)` | `qvm_tick` | advance time, drain pending effects, fire due checks, notify subscribers |
+| — (convenience) | `int qm_bind_str(qvm_t*, const char *name, const char *canon)` | `qm_bind` | BIND a canonical-JSON string value |
+| — (convenience) | `int qm_effect_set(qvm_t*, const char *target, const char *canon)` | `qm_effect` | the QM_SET action: queue "install canon string", inverse "set NULL" |
+
+### Host evidence
+
+```
+$ make -C firmware opcodes-run
+{"ok":true,"passed":24,"failed":0}
+```
+
+24 checks: the five opcodes exercised directly (value visibility, implicit
+BIND on LINK, `!type` reverse edges, same-type append, queue-before/apply-
+after TICK, pending drain, time advance, event log, unknown-target errors,
+dispose/inverse), a by-hand bind+link+effect+tick+view round trip, and a
+serve regression — `qm_serve` through the new layer answers all 5 fixture
+signals identically to the Pass A/B equivalence run (`make run` output
+byte-identical). ASan clean (one pre-existing upstream quirk: each serve
+appends an effect record whose strdup'd target is never freed by
+`qvm_thing_free` — vendored code, left verbatim, ~15 bytes/serve).
+
+### Failure first
+
+The original `qm_serve` passed a stack `SetArg` into `qvm_effect` and got
+away with it because its `qvm_tick` ran in the same stack frame. Hoisting
+the set-effect into `qm_effect_set` moved the tick across a frame boundary
+— host ASan caught `fwd_set` reading the dead shell (stack-use-after-
+return). Fix: the effect arg is now the strdup'd canon itself (heap,
+owned by the thing after apply) — no wrapper struct, no frame to outlive.
+The lesson: the VM's pending queue holds raw `arg` pointers; any wrapper
+layer must heap-own them.
+
+### Build + flash (esp32s3, all 3 pio envs green)
+
+```
+$ make -C firmware fw          # esp32dev + esp32s3 + reflex_arc: SUCCESS
+$ make -C firmware merge-s3    # dist/opcodes-s3-merged-0x0.bin (337,600 B)
+```
+
+esp32s3 footprint: RAM 5.7% (18,824 / 327,680) · flash 8.1% (271,697 /
+3,342,336). Banner now reads `limb-blink v0.2` + the canon line.
+
+Casey's flash line (merged image, one shot; Linux):
+
+```sh
+python3 ~/.platformio/packages/tool-esptoolpy/esptool.py \
+    --chip esp32s3 --port /dev/ttyACM0 --baud 921600 \
+    write_flash -z 0x0 dist/opcodes-s3-merged-0x0.bin
+```
+
+Windows: `py -m esptool --chip esp32s3 --port COM14 --baud 921600 write_flash -z 0x0 dist\opcodes-s3-merged-0x0.bin`
+(sha256 `5a939c51564a7f2879dfe3718384820a7e4e3cb7d1edc14d26eddf76125ff905`,
+in `dist/SHA256SUMS`).
+
+Not proven yet: on-metal serial run of v0.2 (the v0.1 blink is proven on
+this board; v0.2 changes the serve path routing and banner only — same
+host-verified semantics).

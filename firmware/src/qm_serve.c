@@ -1,24 +1,16 @@
 /* qm_serve.c — portable serve path (host harness today, xtensa later).
  * Adapted from qm_bench.c (SuperInstance/cell-cascade, branch
  * edge-benchmarks): rule scan via rule_matches, hit -> QM_SET effect +
- * qvm_tick on the real quilt-vm-c, read back via qvm_view; miss ->
+ * tick on the real quilt-vm-c, read back via view; miss ->
  * {"miss":true} in-VM with a null reported response. The QM_EXPR /
  * sigma_distance branch is dropped (blink is QM_SET only) — a rule with a
- * QM_EXPR action is an error here (-2). No fprintf/exit: return codes only. */
+ * QM_EXPR action is an error here (-2). No fprintf/exit: return codes only.
+ *
+ * 2026-08-26 opcodes lane: the VM touch points now go through qm_opcodes
+ * (the five canon functions qm_bind/qm_link/qm_effect/qm_view/qm_tick +
+ * the qm_bind_str/qm_effect_set string conveniences, which absorbed this
+ * file's fwd_set/inv_set/free_str verbatim). Semantics unchanged. */
 #include "qm_serve.h"
-
-static void free_str(void *p) { free(p); }
-
-/* effect forward: install the precomputed result string into the thing */
-typedef struct { char *value; } SetArg;
-static void fwd_set(qvm_thing_t *t, void *arg) {
-    SetArg *a = (SetArg *)arg;
-    qvm_thing_set(t, a->value, free_str);
-}
-static void inv_set(qvm_thing_t *t, void *arg) {
-    (void)arg;
-    qvm_thing_set(t, NULL, NULL);
-}
 
 /* guard match: kind equality + payload_equals subset by canonical strcmp */
 static int rule_matches(const QmRule *r, const QmSignal *s) {
@@ -47,16 +39,14 @@ int qm_serve_init(qvm_t **vm_out) {
     qvm_t *vm = qvm_new();
     if (!vm) return -1;
     for (int i = 0; i < QM_N_BINDS; i++) {
-        if (qvm_bind(vm, qm_binds[i].target,
-                     qm_binds[i].canon ? strdup(qm_binds[i].canon) : NULL,
-                     free_str) != 0) {
+        if (qm_bind_str(vm, qm_binds[i].target, qm_binds[i].canon) != 0) {
             qvm_free(vm);
             return -1;
         }
     }
     for (int i = 0; i < QM_N_LINKS; i++) {
-        if (qvm_link(vm, qm_links[i].from, qm_links[i].to,
-                     qm_links[i].type) != 0) {
+        if (qm_link(vm, qm_links[i].from, qm_links[i].to,
+                    qm_links[i].type) != 0) {
             qvm_free(vm);
             return -1;
         }
@@ -75,23 +65,18 @@ int qm_serve(qvm_t *vm, const QmSignal *s, char mode_out[16], const char **respo
     char target[256];
     snprintf(target, sizeof target, "%s:response", s->to);
 
-    SetArg arg;
     if (hit) {
         strcpy(mode_out, "table");
-        arg.value = strdup(hit->set_canon);
+        /* EFFECT + TICK on the real VM — the pending-effects drain applies it */
+        if (qm_effect_set(vm, target, hit->set_canon) != 0) return -1;
     } else {
         strcpy(mode_out, "table-miss");
-        arg.value = strdup("{\"miss\":true}");
+        /* effect installs {"miss":true} inside the VM */
+        if (qm_effect_set(vm, target, "{\"miss\":true}") != 0) return -1;
     }
-    if (!arg.value) return -1;
-    /* EFFECT + TICK on the real VM — the pending-effects drain applies it */
-    if (qvm_effect(vm, target, fwd_set, inv_set, &arg) != 0) {
-        free(arg.value);
-        return -1;
-    }
-    qvm_tick(vm, 1.0);
+    qm_tick(vm, 1.0);
     /* table-miss reports null (the {miss:true} stays inside the VM) */
-    *response_out = hit ? (const char *)qvm_view(vm, target, "anyone") : NULL;
+    *response_out = hit ? (const char *)qm_view(vm, target, "anyone") : NULL;
     return 0;
 }
 
