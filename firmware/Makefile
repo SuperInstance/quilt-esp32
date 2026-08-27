@@ -68,7 +68,7 @@ nmea-run: nmea-host
 	./host_nmea_bin vessel-stream.txt
 
 nmea-fw: nmea-gen sync-nmea
-	$(HOME)/.platformio/penv/bin/pio run -d $(CURDIR) -e nmea_limb
+	$(HOME)/.platformio/penv/bin/pio run -d $(CURDIR) -e nmea
 
 nmea-clean:
 	rm -f host_nmea_bin src/nmea/vessel_qm.h
@@ -83,9 +83,9 @@ sync-nmea:
 merge-nmea-s3: nmea-fw
 	python3 $(HOME)/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32s3 \
 	    merge_bin -o dist/vessel-nmea-s3-merged-0x0.bin \
-	    0x0 .pio/build/nmea_limb/bootloader.bin \
-	    0x8000 .pio/build/nmea_limb/partitions.bin \
-	    0x10000 .pio/build/nmea_limb/firmware.bin
+	    0x0 .pio/build/nmea/bootloader.bin \
+	    0x8000 .pio/build/nmea/partitions.bin \
+	    0x10000 .pio/build/nmea/firmware.bin
 
 # ── reflex-arc: the critic's frozen gate on metal ─────────────────────────
 # critic-gate.qm is minted on the cell-cascade side:
