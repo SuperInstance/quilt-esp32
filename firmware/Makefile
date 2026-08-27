@@ -8,7 +8,7 @@
 # src/reflex/gate_qm.h from the minted critic-gate.qm.
 
 .DEFAULT_GOAL := run
-.PHONY: gen host run clean sync fw fw-clean reflex-gen reflex-host reflex-run reflex-fw reflex-clean opcodes-host opcodes-run opcodes-clean merge-s3 nmea-gen nmea-host nmea-run nmea-fw nmea-clean merge-nmea-s3
+.PHONY: gen host run clean sync fw fw-clean reflex-gen reflex-host reflex-run reflex-fw reflex-clean opcodes-host opcodes-run opcodes-clean merge-s3 nmea-gen nmea-host nmea-run nmea-fw nmea-clean merge-nmea-s3 eileen-gen eileen-host eileen-run eileen-fw eileen-clean sync-eileen merge-eileen-s3
 
 gen:
 	mkdir -p src/vm
@@ -86,6 +86,42 @@ merge-nmea-s3: nmea-fw
 	    0x0 .pio/build/nmea/bootloader.bin \
 	    0x8000 .pio/build/nmea/partitions.bin \
 	    0x10000 .pio/build/nmea/firmware.bin
+
+# ── eileen lane: THE EILEEN on metal — ten named pieces, one joint ──
+# eileen.qm is authored here (like vessel-demo.qm): --mint seals the
+# receipt (sha256 of the file with the receipt zeroed), compile validates
+# the vessel (joint order, steel formulas, predecessors-only reads) into
+# src/eileen/eileen_qm.h.
+
+eileen-gen:
+	mkdir -p src/eileen
+	python3 qm_eileen2c.py eileen.qm src/eileen/eileen_qm.h
+
+eileen-host: eileen-gen
+	gcc -O2 -std=c99 -Wall -I. -Ivm -Isrc/eileen -Isrc host_eileen/main.c nmea.c eileen_limb.c qm_opcodes.c vm/quilt_vm.c -o host_eileen_bin
+
+eileen-run: eileen-host
+	./host_eileen_bin eileen-days.txt
+
+eileen-fw: eileen-gen sync-eileen
+	$(HOME)/.platformio/penv/bin/pio run -d $(CURDIR) -e eileen
+
+eileen-clean:
+	rm -f host_eileen_bin src/eileen/eileen_qm.h
+
+# sync the eileen lane into the pio tree (eileen env compiles src/eileen/
+# + the shared canon/vm copies already in src/ — see platformio.ini)
+sync-eileen:
+	mkdir -p src/eileen
+	cp nmea.c nmea.h eileen_limb.c eileen_limb.h src/eileen/
+
+# merged esp32s3 image (same layout as the opcodes/nmea lanes)
+merge-eileen-s3: eileen-fw
+	python3 $(HOME)/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32s3 \
+	    merge_bin -o dist/the-eileen-s3-merged-0x0.bin \
+	    0x0 .pio/build/eileen/bootloader.bin \
+	    0x8000 .pio/build/eileen/partitions.bin \
+	    0x10000 .pio/build/eileen/firmware.bin
 
 # ── reflex-arc: the critic's frozen gate on metal ─────────────────────────
 # critic-gate.qm is minted on the cell-cascade side:
