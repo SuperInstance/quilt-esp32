@@ -1,0 +1,237 @@
+{
+  "format": "qm",
+  "version": 1,
+  "organism": "eileen-limb",
+  "ops": [
+    {
+      "op": "bind",
+      "target": "eileen-root",
+      "value": {
+        "name": "eileen-root",
+        "tier": "totipotent",
+        "role": "minimal spine — no rules, escalation target of record",
+        "rule_count": 0
+      }
+    },
+    {
+      "op": "bind",
+      "target": "eileen-root:facts",
+      "value": {
+        "name": "eileen-root",
+        "tier": "totipotent",
+        "role": "minimal spine — no rules, escalation target of record",
+        "rule_count": 0
+      }
+    },
+    {
+      "op": "bind",
+      "target": "eileen-root:response",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "eileen-limb",
+      "value": {
+        "name": "eileen-limb",
+        "tier": "sclerotic",
+        "role": "the vessel limb — ten named pieces, one dependency chain, zero model calls",
+        "cost_per_call": 0,
+        "latency_ns": 0,
+        "rule_count": 2
+      }
+    },
+    {
+      "op": "bind",
+      "target": "eileen-limb:facts",
+      "value": {
+        "rule_version": 1,
+        "source": "eileen.qm (this file is the source of truth — the metal resolution of the vessel)",
+        "source_sha256": "8721b4bd042aa8c51006f1b2c9bd1eb9d36928a032b2e5e0bbf3ed9d5d4de36e",
+        "exported_at": "2026-08-27T05:50:00.000Z",
+        "vessel": "F/V EILEEN — the same boat in pine (prose), steel (sheet YAML), bread (MIDI) and metal (this file)",
+        "materials": {
+          "prose": "ai-writings/creative/the-eileen-a-vessel-built-of-days.md",
+          "steel": "ai-writings/creative/eileen.sheet.yaml",
+          "bread": "ai-writings/creative/the-eileen.mid",
+          "metal": "eileen.qm (this file) -> qm_eileen2c.py -> eileen_qm.h -> eileen_limb.c"
+        },
+        "keel": {
+          "value": 1,
+          "led": "the 2026-08-26 13:19 blink — blink.qm on the same bench; movement I of the bread score",
+          "tempo_bpm": 60,
+          "blink_ms": 500,
+          "semantics": "half a second lit, half a second dark, for as long as the boat floats"
+        },
+        "stem": {
+          "source": "NMEA 0183 on UART0, byte-at-a-time (nmea.c — the proven framer)",
+          "semantics": "a completed valid sentence advances the day (stem += 1); a line whose tally fails goes over the side without advancing"
+        },
+        "cells": [
+          { "name": "keel",       "kind": "value",    "unit": "day", "from": "the first thing laid, the last thing abandoned — the blink, value 1" },
+          { "name": "stem",       "kind": "sensor",   "unit": "day", "from": "the wire: one character at a time, a completed sentence advances the day" },
+          { "name": "keelson",    "kind": "formula",  "unit": "day", "from": "line upon line, each sealed against the last — carries the stem's hand-off aft" },
+          { "name": "breast_hook", "kind": "formula", "unit": "day", "from": "the grown knee — receives the keelson's rise, clasps both sides to one curve" },
+          { "name": "rigging",    "kind": "formula",  "unit": "day", "from": "the five verbs — bind link effect view tick; ends stepping to the rail" },
+          { "name": "bulwarks",   "kind": "formula",  "unit": "day", "from": "walls of agreement, not stone — defend the young flag" },
+          { "name": "ensign",     "kind": "formula",  "unit": "day", "from": "the newest piece, still learning what it defends" },
+          { "name": "scuppers",   "kind": "formula",  "unit": "day", "from": "nothing precious, nothing wasted — the day drains back to the water" },
+          { "name": "sheerboard", "kind": "formula",  "unit": "day", "from": "where the hull stops trusting the water and starts answering the sky" },
+          { "name": "figurehead", "kind": "listener", "unit": "day", "from": "carved last, faces the fog; closes the work where it began" }
+        ],
+        "joint_order": ["keel", "stem", "keelson", "breast_hook", "rigging", "bulwarks", "ensign", "scuppers", "sheerboard", "figurehead"],
+        "read_sets": {
+          "keel": [],
+          "stem": ["uart"],
+          "keelson": ["stem", "keel"],
+          "breast_hook": ["keelson"],
+          "rigging": ["breast_hook", "keelson"],
+          "bulwarks": ["rigging"],
+          "ensign": ["bulwarks"],
+          "scuppers": ["ensign"],
+          "sheerboard": ["scuppers", "breast_hook"],
+          "figurehead": ["sheerboard"]
+        },
+        "formulas": {
+          "keelson": "stem + keel",
+          "breast_hook": "keelson * 2",
+          "rigging": "breast_hook + keelson",
+          "bulwarks": "rigging - 2",
+          "ensign": "bulwarks + 1",
+          "scuppers": "ensign - 1",
+          "sheerboard": "scuppers + breast_hook",
+          "figurehead": "sheerboard > 0 ? keel : 0"
+        },
+        "figurehead": {
+          "watch": "sheerboard",
+          "condition": "sheerboard > 0",
+          "closes_on": "keel",
+          "log": "she faces forward; the days grew from the keel"
+        },
+        "integer_discipline": {
+          "format": "signed 32-bit day counts, integer-only, no floats",
+          "closed_form": "for day N: keel=1, stem=N, keelson=N+1, breast_hook=2N+2, rigging=3N+3, bulwarks=3N+1, ensign=3N+2, scuppers=3N+1, sheerboard=5N+3, figurehead=keel=1 when sheerboard>0",
+          "day_max": 429496728,
+          "why": "sheerboard=5N+3 is the widest cell; day saturates at (INT32_MAX-3)/5 so no piece can overflow"
+        }
+      }
+    },
+    {
+      "op": "bind",
+      "target": "eileen-limb:response",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "log.figurehead",
+      "value": "she faces forward; the days grew from the keel"
+    },
+    {
+      "op": "bind",
+      "target": "keel",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "stem",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "keelson",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "breast_hook",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "rigging",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "bulwarks",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "ensign",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "scuppers",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "sheerboard",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "figurehead",
+      "value": null
+    },
+    {
+      "op": "link",
+      "from": "eileen-limb",
+      "to": "eileen-root",
+      "type": "lineage"
+    },
+    {
+      "op": "effect",
+      "target": "eileen-limb:response",
+      "guard": {
+        "kind": "tick",
+        "payload_equals": {
+          "phase": "on"
+        }
+      },
+      "action": {
+        "set": {
+          "led": true
+        }
+      }
+    },
+    {
+      "op": "effect",
+      "target": "eileen-limb:response",
+      "guard": {
+        "kind": "tick",
+        "payload_equals": {
+          "phase": "off"
+        }
+      },
+      "action": {
+        "set": {
+          "led": false
+        }
+      }
+    }
+  ],
+  "views": [
+    {
+      "name": "eileen-limb/facts",
+      "target": "eileen-limb:facts",
+      "project": "facts"
+    },
+    {
+      "name": "eileen-limb/response",
+      "target": "eileen-limb:response",
+      "project": "response"
+    },
+    {
+      "name": "log.figurehead",
+      "target": "log.figurehead",
+      "project": "value"
+    }
+  ],
+  "routes": {
+    "uart": "eileen-limb",
+    "tick": "eileen-limb"
+  },
+  "escalations": {}
+}
