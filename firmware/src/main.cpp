@@ -42,7 +42,8 @@ void setup() {
         Serial.println("{\"ok\":false,\"error\":\"qm_serve_init\"}");
         return;
     }
-    Serial.println("limb-blink v0.1 — quilt signal cell on ESP32 — no cloud, no model");
+    Serial.println("limb-blink v0.2 — quilt signal cell on ESP32 — no cloud, no model");
+    Serial.println("canon: qm_bind/qm_link/qm_effect/qm_view/qm_tick (Paper 211)");
     Serial.printf("facts: rules=%d binds=%d\n", QM_N_RULES, QM_N_BINDS);
 }
 
