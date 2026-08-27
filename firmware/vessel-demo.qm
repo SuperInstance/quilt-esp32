@@ -1,0 +1,176 @@
+{
+  "format": "qm",
+  "version": 1,
+  "organism": "vessel-limb",
+  "ops": [
+    {
+      "op": "bind",
+      "target": "vessel-root",
+      "value": {
+        "name": "vessel-root",
+        "tier": "totipotent",
+        "role": "minimal spine — no rules, escalation target of record",
+        "rule_count": 0
+      }
+    },
+    {
+      "op": "bind",
+      "target": "vessel-root:facts",
+      "value": {
+        "name": "vessel-root",
+        "tier": "totipotent",
+        "role": "minimal spine — no rules, escalation target of record",
+        "rule_count": 0
+      }
+    },
+    {
+      "op": "bind",
+      "target": "vessel-root:response",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "vessel-limb",
+      "value": {
+        "name": "vessel-limb",
+        "tier": "sclerotic",
+        "role": "nmea ingest limb — instrument sentences in, sheet cells + band rules out, zero model calls",
+        "cost_per_call": 0,
+        "latency_ns": 0,
+        "rule_count": 4
+      }
+    },
+    {
+      "op": "bind",
+      "target": "vessel-limb:facts",
+      "value": {
+        "rule_version": 1,
+        "source": "vessel-demo.qm (this file is the source of truth — no upstream artifact)",
+        "source_sha256": "27a128bd61a10293d2dc3841f4c85afe5bb308dfb7e6f2916d4db158eecfb954",
+        "exported_at": "2026-08-27T02:30:00.000Z",
+        "vessel": "F/V EILEEN, Kodiak AK — demo working box around St. Herman Harbor",
+        "input": "NMEA 0183 on UART0 — at sea the instrument feed (GPS/heading/depth/log), on the desk a USB-serial adapter or the replay harness",
+        "fixed_point": {
+          "format": "micro-units: signed 32-bit integers, 1 unit = 1e-6",
+          "scale": 1000000,
+          "why_integer": "no floats on target — the reflex-arc discipline; every NMEA magnitude lands exactly on the 1e-6 grid or truncates to it (documented ±1 µdeg ≈ 0.11 m at the equator)",
+          "conversions": {
+            "coordinates": "NMEA ddmm.mmmm/dddmm.mmmm + hemisphere -> signed micro-degrees; 64-bit integer intermediate: deg*1e6 + (mm*10^f+frac)*1e6/(60*10^f); N/E positive, S/W negative",
+            "depth": "DBT meters field -> micro-meters; feet fallback: um = uft*3048/10000; fathoms fallback: um = ufath*1852/1000",
+            "speed": "RMC sog / VHW knots -> micro-knots; VHW km/h fallback: ukn = ukph*5/18 (exact)",
+            "heading_course": "HDT heading / RMC cog degrees -> micro-degrees"
+          }
+        },
+        "cells": [
+          { "name": "ais.position.lat", "unit": "udeg",  "from": "GGA/RMC — until the AIVDM lane exists these mirror own-ship; the seam AIS plugs into" },
+          { "name": "ais.position.lon", "unit": "udeg",  "from": "GGA/RMC — mirrors own-ship until the AIS metalstone" },
+          { "name": "own.fix",          "unit": "bool",  "from": "GGA fix quality > 0, RMC status A" },
+          { "name": "own.heading",      "unit": "udeg",  "from": "HDT true heading" },
+          { "name": "own.depth",        "unit": "um",    "from": "DBT depth below transducer" },
+          { "name": "own.sog",          "unit": "ukn",   "from": "RMC speed over ground" },
+          { "name": "own.wspeed",       "unit": "ukn",   "from": "VHW water speed" }
+        ],
+        "rules": {
+          "geofence": {
+            "cells": ["ais.position.lat", "ais.position.lon"],
+            "box_udeg": { "lat_lo": 57750000, "lat_hi": 57850000, "lon_lo": -152500000, "lon_hi": -152350000 },
+            "margin_udeg": 5000,
+            "semantics": "ok inside the box inclusive; warn outside but within margin OR inside yet within margin of a boundary; bad outside beyond margin",
+            "note": "Kodiak harbor working box, 57.75-57.85N / 152.50-152.35W; margin 0.005 deg ~ 0.55 m lat"
+          },
+          "depth": {
+            "cell": "own.depth",
+            "warn_below_um": 10000000,
+            "alert_below_um": 5000000,
+            "semantics": "bad depth < alert_below (5 m); warn < warn_below (10 m); ok otherwise; depth 0 = no reading yet, rule not judged"
+          },
+          "drift": {
+            "cell": "own.sog",
+            "warn_above_ukn": 500000,
+            "alert_above_ukn": 1000000,
+            "semantics": "anchored-drift check: bad sog > 1.0 kn; warn > 0.5 kn; ok otherwise"
+          },
+          "nofix": {
+            "cell": "own.fix",
+            "severity": 1,
+            "semantics": "fix lost (own.fix == 0) -> warn; judgment also flags when position is stale by sentence absence — host/monitor concern, off-metal here"
+          }
+        },
+        "alert_levels": { "0": "clear — green steady", "1": "watch — amber steady", "2": "alert — red flash + alert pin" },
+        "scope": "own-ship core five only; AIVDM/AIS targets, CPA/TCPA, haversine closing-rate are the next metalstone and stay off this limb (pre-registered)"
+      }
+    },
+    {
+      "op": "bind",
+      "target": "vessel-limb:response",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "vessel-limb:alert",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "ais.position.lat",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "ais.position.lon",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "own.fix",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "own.heading",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "own.depth",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "own.sog",
+      "value": null
+    },
+    {
+      "op": "bind",
+      "target": "own.wspeed",
+      "value": null
+    },
+    {
+      "op": "link",
+      "from": "vessel-limb",
+      "to": "vessel-root",
+      "type": "lineage"
+    }
+  ],
+  "views": [
+    {
+      "name": "vessel-limb/facts",
+      "target": "vessel-limb:facts",
+      "project": "facts"
+    },
+    {
+      "name": "vessel-limb/response",
+      "target": "vessel-limb:response",
+      "project": "response"
+    },
+    {
+      "name": "vessel-limb/alert",
+      "target": "vessel-limb:alert",
+      "project": "response"
+    }
+  ],
+  "routes": {
+    "nmea": "vessel-limb"
+  },
+  "escalations": {}
+}

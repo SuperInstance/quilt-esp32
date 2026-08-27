@@ -1,0 +1,26 @@
+# vessel-stream.txt — F/V EILEEN demo fixture (hand-written, real format)
+# Kodiak working box from vessel-demo.qm: lat 57.75-57.85N, lon 152.50-152.35W
+# Rules: depth alert<5m warn<10m · drift (anchored) warn>0.5kn alert>1.0kn
+# One judgment per served sentence — see host_nmea EXPECT for the oracle.
+# (line 12 = corrupt checksum on purpose; line 16 = ZDA unknown; line 17
+#  is a 104-char GPTXT overflow probe)
+
+$GPGGA,120001,5747.900,N,15224.500,W,1,10,0.8,1.5,M,1.0,M,,*63
+$GPRMC,120010,A,5747.900,N,15224.500,W,0.3,180.0,260826,,,A*6F
+$SDDBT,65.6,f,20.0,M,10.9,F*39
+$HCHDT,275.4,T*2D
+$VWVHW,275.4,T,,M,0.0,N,0.0,K*7E
+$SDDBT,26.2,f,8.0,M,4.4,F*38
+$SDDBT,13.8,f,4.2,M,2.3,F*3B
+$SDDBT,65.6,f,,M,10.9,F*25
+$GPGGA,120002,5830.000,N,15224.500,W,1,10,0.8,1.5,M,1.0,M,,*66
+$GPGGA,120003,5747.900,N,15224.500,W,1,10,0.8,1.5,M,1.0,M,,*61
+$GPRMC,120020,A,5747.900,N,15224.500,W,1.2,090.0,260826,,,A*6C
+$GPRMC,120030,A,5747.900,N,15224.500,W,0.2,090.0,260826,,,A*6C
+$SDDBT,26.2,f,8.0,M,4.4,F*00
+$GPGGA,120040,5747.900,N,15224.500,W,0,00,,,M,,M,,*45
+$GPRMC,120050,V,5747.900,N,15224.500,W,0.0,090.0,260826,,,A*7F
+$GPZDA,160012.71,11,03,2004,-1,00*7D
+$GPTXT,01,01,OVERFLOW PROBE THIS LINE IS DELIBERATELY FAR PAST THE EIGHTY TWO CHARACTER NMEA LIMIT XX*60
+$GPGGA,120005,5745.003,N,15224.500,W,1,10,0.8,1.5,M,1.0,M,,*6F
+$GPGGA,120006,5747.900,N,15224.500,W,1,10,0.8,1.5,M,1.0,M,,*64
