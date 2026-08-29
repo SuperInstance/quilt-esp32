@@ -6,4 +6,5 @@ firmware/.pio/
 firmware/host_blink
 firmware/host_reflex_bin
 firmware/host_opcodes_bin
+firmware/host_oil_bin
 tools/reflex/board/

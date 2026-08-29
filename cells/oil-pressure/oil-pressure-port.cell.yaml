@@ -1,0 +1,50 @@
+# oil-pressure-port.cell.yaml -- the L0 natural-language cell (SEMANTIC-TOWER
+# section 1's worked example, verbatim in substance).
+#
+# A 0.5-4.5 V transducer over 0-150 psi. raw = transducer millivolts
+# (integer). psi = (mV - 500) * 3/80 -- the basis trick: 4000 mV of span
+# times 3/80 gives exactly 150, so on the 1/80-psi basis the calibration is
+# exact integer arithmetic, by choice of unit.
+#
+# The edit set (the engineer's attention horizon) is exactly what appears
+# here: io, raw, rendering, snap, tick. The target language is NOT in this
+# file -- choosing C is an optimization, not a specification (the
+# language-below-the-horizon lemma).
+
+name: oil-pressure-port
+description: >
+  Engine oil pressure. A 0.5-4.5 V transducer spanning 0-150 psi, read as
+  raw integer millivolts and rendered to whole PSI for the game twin.
+
+io:
+  - name: adc_pin
+    kind: adc
+    unit: V
+    note: transducer output voltage (0.5-4.5 V across the 0-150 psi range)
+
+raw:
+  quantity: transducer millivolts, integer
+  prefilter:
+    kind: moving_median
+    window: 5      # odd, so the median is always a real sample; kills spikes
+
+rendering:
+  # Same line in volts: psi = (V - 0.5 V) * 37.5. The mV basis is the whole
+  # point -- on 1/80 psi the calibration constant comes out whole
+  # (Pythagorean snapping, the 1-D case, SEMANTIC-TOWER 5.3).
+  equation: "psi = (mV - 500) * 3 / 80"
+  basis: 1/80 psi
+  range_psi: [0, 150]
+  quantize: whole_psi
+  deadband: {unit: psi, whole: 1}
+
+snap:
+  # Deadband-snap contract (SEMANTIC-TOWER 5): agree-to-within-D,
+  # snap-on-exceed, reality-wins. D = the deadband dial, whole psi; the
+  # judge runs in squared integer form (5.2), so the weakest substrate sets
+  # the arithmetic and no floating point ever enters the loop (5.3).
+  twin_endpoint: "twin://game/oil-pressure-port/psi"
+  dial: deadband_psi
+
+tick:
+  period_ms: 100   # qm_tick: fixed timestep, game discipline (5.4)

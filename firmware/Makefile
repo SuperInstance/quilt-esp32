@@ -8,7 +8,7 @@
 # src/reflex/gate_qm.h from the minted critic-gate.qm.
 
 .DEFAULT_GOAL := run
-.PHONY: gen host run clean sync fw fw-clean reflex-gen reflex-host reflex-run reflex-fw reflex-clean opcodes-host opcodes-run opcodes-clean merge-s3 nmea-gen nmea-host nmea-run nmea-fw nmea-clean merge-nmea-s3 eileen-gen eileen-host eileen-run eileen-fw eileen-clean sync-eileen merge-eileen-s3
+.PHONY: gen host run clean sync fw fw-clean reflex-gen reflex-host reflex-run reflex-fw reflex-clean opcodes-host opcodes-run opcodes-clean merge-s3 nmea-gen nmea-host nmea-run nmea-fw nmea-clean merge-nmea-s3 eileen-gen eileen-host eileen-run eileen-fw eileen-clean sync-eileen merge-eileen-s3 tower-sync oil-sync oil-host oil-run oil-fw oil-clean merge-oil-s3
 
 gen:
 	mkdir -p src/vm
@@ -142,6 +142,50 @@ reflex-fw: reflex-gen sync
 
 reflex-clean:
 	rm -f host_reflex_bin src/reflex/gate_qm.h
+
+# ── oil-pressure lane: TWIN-PORT LANE — the tower cell on metal ──────────
+# cells/oil-pressure/ (repo root) holds the quilt-verilog tower compiler's
+# output — the generated C middle layer + the L0 cell copy — plus this
+# repo's glue: ADC board file (oil_pressure_main.cpp), deadband-snap twin
+# client stub (twin_snap.cpp), config placeholder (twin_config.h).
+# Lockstep rule: tower_oil_pressure_port.c is NEVER edited here; refresh
+# with tools/tower-sync.sh, which re-runs emith.py + the 17-vector
+# verify.py gate upstream, then re-syncs this tree.
+
+OIL_CELL := ../cells/oil-pressure
+
+tower-sync:
+	bash ../tools/tower-sync.sh
+
+oil-sync:
+	mkdir -p src/oil_pressure
+	cp $(OIL_CELL)/tower_oil_pressure_port.c $(OIL_CELL)/tower_port.h \
+	   $(OIL_CELL)/twin_config.h $(OIL_CELL)/twin_snap.h \
+	   $(OIL_CELL)/twin_snap.cpp $(OIL_CELL)/oil_pressure_main.cpp \
+	   src/oil_pressure/
+
+# host gate: the same 17 golden vectors verify.py runs upstream, against
+# THIS repo's copy of the generated cell (rendering chain minus ADC glue)
+oil-host:
+	gcc -O2 -std=c99 -Wall -Wextra -Werror -I$(OIL_CELL) \
+	    host_oil/main.c $(OIL_CELL)/tower_oil_pressure_port.c -o host_oil_bin
+
+oil-run: oil-host
+	./host_oil_bin
+
+oil-fw: oil-sync
+	$(HOME)/.platformio/penv/bin/pio run -d $(CURDIR) -e oil_pressure
+
+oil-clean:
+	rm -f host_oil_bin
+
+# merged esp32s3 image (same layout as the other lanes; flash manually)
+merge-oil-s3: oil-fw
+	python3 $(HOME)/.platformio/packages/tool-esptoolpy/esptool.py --chip esp32s3 \
+	    merge_bin -o dist/oil-pressure-s3-merged-0x0.bin \
+	    0x0 .pio/build/oil_pressure/bootloader.bin \
+	    0x8000 .pio/build/oil_pressure/partitions.bin \
+	    0x10000 .pio/build/oil_pressure/firmware.bin
 
 clean:
 	rm -f host_blink src/qm_prog.h
