@@ -51,6 +51,12 @@ pub struct QuiltEngine {
     pub count: u8,
 }
 
+impl Default for QuiltEngine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl QuiltEngine {
     pub const fn new() -> Self {
         Self {
@@ -62,7 +68,9 @@ impl QuiltEngine {
     /// Define a new cell. Returns the cell's index in the engine.
     /// Returns None if the engine is full.
     pub fn define(&mut self, id: &'static str, kind: CellKind, value: CellValue) -> Option<u8> {
-        if (self.count as usize) >= self.cells.len() { return None; }
+        if (self.count as usize) >= self.cells.len() {
+            return None;
+        }
         let idx = self.count;
         self.cells[idx as usize] = Some(Cell {
             id,
@@ -111,7 +119,7 @@ impl QuiltEngine {
     /// return the cached value.
     pub fn get(&self, id: &str) -> Option<CellValue> {
         let idx = self.find(id)?;
-        Some(self.cells[idx as usize].as_ref()?.value.clone())
+        Some(self.cells[idx as usize].as_ref()?.value)
     }
 
     fn find(&self, id: &str) -> Option<u8> {
